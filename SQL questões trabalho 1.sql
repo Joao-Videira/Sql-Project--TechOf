@@ -1,258 +1,159 @@
---qual é o revenue por ano?
-select 
-year(orderdate) as  'Year',
-sum(subtotal) as Revenue
-from sales.salesorderheader
-group by year(OrderDate)
-order by Year
+/* AdventureWorks Sales & Performance Analysis
+   Author: JoÃ£o Videira
+   Description: SQL queries for extracting Revenue, Profit, and Ranking KPIs.
+*/
 
-select
-year(h.orderdate) as  'Year',
-sum(d.LineTotal) as Total
-from sales.SalesOrderDetail D
-join sales.SalesOrderHeader H
-	on d.SalesOrderID=h.SalesOrderID
-group by  year(h.OrderDate)
+---------------------------------------------------------
+-- 1. REVENUE ANALYSIS
+---------------------------------------------------------
 
---REVENUE com ano e mês de cada ano
-select 
-year(orderdate) as  'Year',
-month(orderdate) as 'Month',
-sum(subtotal) as Revenue
-from sales.salesorderheader
-group by year(OrderDate), 
-		month(OrderDate)
-order by Year
-
---qual é o revenue por mês?
-select
-month(orderdate) as 'Month',
-sum (subtotal) as Revenue
-from sales.SalesOrderHeader
-group by month(OrderDate)
-order by Month
-
---qual é o profit por ano?
-select
-year(h.orderdate) as 'Year',
-SUM((d.LineTotal) - (d.OrderQty * p.StandardCost)) as Profit
-from sales.SalesOrderDetail D
-	join Production.Product P
-	on d.ProductID=p.ProductID
-	join sales.SalesOrderHeader h
-	on d.SalesOrderID=h.SalesOrderID
-group by year(h.orderdate)
-order by year(h.orderdate)
-
-
-
---Profit com Ano e mês de cada ano
-select
-month(h.OrderDate) as 'Month',
-year(h.orderdate) as 'Year',
-SUM((d.LineTotal) -(d.OrderQty * p.StandardCost)) as Profit
-from sales.SalesOrderDetail D
-	join Production.Product P
-	on d.ProductID=p.ProductID
-	join sales.SalesOrderHeader h
-	on d.SalesOrderID=h.SalesOrderID
-group by year(h.orderdate),
-		month(h.OrderDate)
-order by year(h.orderdate)
-
-
---qual é o profit por mês?
-select
-month(h.orderdate) as 'Month',
-SUM(d.LineTotal) - (d.OrderQty * p.StandardCost) as Profit
-from sales.SalesOrderDetail D
-	join Production.Product P
-	on d.ProductID=p.ProductID
-	join sales.SalesOrderHeader h
-	on d.SalesOrderID=h.SalesOrderID
-group by month(h.orderdate)
-order by month(h.orderdate)
-
---Qual é o Avg do discount?
-select	avg(UnitPriceDiscount) AS AvgDiscount
-from Sales.SalesOrderDetail
-
-select
-	productid,
-	avg(UnitPriceDiscount) AS AvgDiscount
-from Sales.SalesOrderDetail
-group by ProductID
-order by AvgDiscount desc
-
-select
-ProductID,
-max(unitpricediscount) as Discount
-from sales.SalesOrderDetail
-group by ProductID
-order by Discount desc
-
--- Quantity of items sold
-
+-- 1.1. Total Revenue per Year
+-- Logic: Grouping by year using the SalesOrderHeader table.
 SELECT 
-    YEAR(h.OrderDate)  AS [Year],
+    YEAR(OrderDate) AS [Year],
+    SUM(SubTotal) AS Revenue
+FROM Sales.SalesOrderHeader
+GROUP BY YEAR(OrderDate)
+ORDER BY [Year];
+
+-- 1.2. Seasonality: Revenue by Month and Year
+-- Logic: Monthly breakdown to identify purchase patterns.
+SELECT 
+    YEAR(OrderDate) AS [Year],
+    MONTH(OrderDate) AS [Month],
+    SUM(SubTotal) AS Revenue
+FROM Sales.SalesOrderHeader
+GROUP BY YEAR(OrderDate), MONTH(OrderDate)
+ORDER BY [Year], [Month];
+
+-- 1.3. Aggregated Monthly Revenue (Seasonal Pattern)
+-- Logic: Summing all "Januaries", "Februaries", etc., to detect business seasonality.
+SELECT 
+    MONTH(OrderDate) AS [Month],
+    SUM(SubTotal) AS Revenue
+FROM Sales.SalesOrderHeader
+GROUP BY MONTH(OrderDate)
+ORDER BY [Month];
+
+
+---------------------------------------------------------
+-- 2. PROFITABILITY ANALYSIS
+---------------------------------------------------------
+
+-- 2.1. Profit per Year
+-- Formula: (LineTotal) - (OrderQty * StandardCost).
+-- Requires joining Sales and Production tables.
+SELECT
+    YEAR(h.OrderDate) AS [Year],
+    SUM((d.LineTotal) - (d.OrderQty * p.StandardCost)) AS Profit
+FROM Sales.SalesOrderDetail D
+JOIN Production.Product P ON d.ProductID = p.ProductID
+JOIN Sales.SalesOrderHeader H ON d.SalesOrderID = h.SalesOrderID
+GROUP BY YEAR(h.OrderDate)
+ORDER BY [Year];
+
+-- 2.2. Profit per Month (Historical)
+SELECT
+    YEAR(h.OrderDate) AS [Year],
     MONTH(h.OrderDate) AS [Month],
-    CAST(SUM(d.OrderQty) AS DECIMAL(10,0)) AS totalQTY
-FROM Sales.SalesOrderHeader h
-join Sales.SalesOrderDetail d
-on h.SalesOrderID = d.SalesOrderID
+    SUM((d.LineTotal) - (d.OrderQty * p.StandardCost)) AS Profit
+FROM Sales.SalesOrderDetail D
+JOIN Production.Product P ON d.ProductID = p.ProductID
+JOIN Sales.SalesOrderHeader H ON d.SalesOrderID = h.SalesOrderID
 GROUP BY YEAR(h.OrderDate), MONTH(h.OrderDate)
-ORDER BY [Year] ASC, [Month] ASC
+ORDER BY [Year], [Month];
 
 
---Qual é a margem?
-select 	
-	year(OrderDate) 'Year',
-	month(OrderDate) 'Month',
-	(sum(d.LineTotal) - sum(d.OrderQty * p.StandardCost))  as MarginPercent
-from sales.SalesOrderDetail d
-join Production.Product p
-	on d.ProductID=p.ProductID
-join sales.SalesOrderHeader H
-	on d.SalesOrderID=h.SalesOrderID
-group by 
-	year(orderdate),
-	month(orderdate)
-order by year(orderdate) asc, month(OrderDate)
+---------------------------------------------------------
+-- 3. KEY PERFORMANCE INDICATORS (KPIs)
+---------------------------------------------------------
 
---Qual é a margem por cada AVG?
-select 
-	Year(h.orderdate) as 'Year',
-	Month(h.orderdate) as 'Month',
-	format(avg(d.LineTotal - (d.OrderQty * p.StandardCost)),'#.##') as AvgMarginPercent 
-FROM Sales.SalesOrderDetail d
-JOIN Production.Product p
-    ON d.ProductID = p.ProductID
-join sales.salesorderheader h
-	on d.SalesOrderID=h.SalesOrderID
-group by 
-	Year(h.orderdate),
-	Month(h.orderdate) 
-order by Year asc, Month asc
-
-
---RANK YEAR
-with MarginCalcYear as (
-select 
-	year(h.OrderDate) as YearDate,
-	(sum(d.LineTotal) - sum(d.OrderQty * p.StandardCost))/sum(h.SubTotal)  as Margin
-from sales.SalesOrderDetail d
-join Production.Product p
-	on d.ProductID=p.ProductID
-join sales.SalesOrderHeader h
-	on d.SalesOrderID=h.SalesOrderID
-group by year(h.OrderDate)
-)
-
-select 
-YearDate as 'Year',
-RANK () over(
-	order by Margin desc
-	) as YearRank
-from MarginCalcYear
-
---RANK MONTH ( Rank mensal total, para perceber o melhor mês e o pior ano)
-with MarginCalcMonth as (
-select 
-	Year(h.orderdate) as YearDate,
-	month(h.OrderDate) as MonthDate,
-	sum((d.LineTotal)-(d.OrderQty * p.StandardCost))  as Margin
-from sales.SalesOrderDetail d
-join Production.Product p
-	on d.ProductID=p.ProductID
-join sales.SalesOrderHeader h
-	on d.SalesOrderID=h.SalesOrderID
-group by month(h.OrderDate),Year(h.orderdate)
-)
-
-select 
-Yeardate as 'Year',
-MonthDate as 'Month',
-RANK () over(
-	order by Margin desc
-	) as MonthRank
-from MarginCalcMonth
-
---RANK MENSAL POR ANO (Querie com partition by year para perceber os melhores e os piores meses de cada ano)
+-- 3.1. Discount Analysis
+-- Average discount global and per product.
 SELECT 
-    YEAR(h.orderdate)  AS [Year],
-    MONTH(h.orderdate) AS [Month],
-    SUM(h.subtotal - (p.StandardCost*d.orderqty)) AS profit,
-    rank () over (partition by Year(h.orderdate)
-            order by SUM(d.linetotal - (p.StandardCost*d.orderqty)) desc
-            ) as RankMês
-FROM Sales.SalesOrderHeader h
-    left join Sales.SalesOrderDetail d
-    on h.SalesOrderID = d.SalesOrderID
-    left join Production.Product p
-    on d.ProductID = p.ProductID
-GROUP BY YEAR(h.orderdate), MONTH(h.orderdate)
-ORDER BY [Year] ASC, [Month] ASC
+    ProductID,
+    AVG(UnitPriceDiscount) AS AvgDiscount
+FROM Sales.SalesOrderDetail
+GROUP BY ProductID
+ORDER BY AvgDiscount DESC;
+
+-- 3.2. Total Volume: Quantity of items sold
+-- Logic: Monitoring physical product flow over time.
+SELECT 
+    YEAR(h.OrderDate) AS [Year],
+    MONTH(h.OrderDate) AS [Month],
+    CAST(SUM(d.OrderQty) AS DECIMAL(10,0)) AS TotalQty
+FROM Sales.SalesOrderHeader H
+JOIN Sales.SalesOrderDetail D ON h.SalesOrderID = d.SalesOrderID
+GROUP BY YEAR(h.OrderDate), MONTH(h.OrderDate)
+ORDER BY [Year], [Month];
+
+-- 3.3. Monthly Margin Analysis
+SELECT 	
+    YEAR(OrderDate) AS [Year],
+    MONTH(OrderDate) AS [Month],
+    (SUM(d.LineTotal) - SUM(d.OrderQty * p.StandardCost)) AS MarginAbsolute
+FROM Sales.SalesOrderDetail D
+JOIN Production.Product P ON d.ProductID = p.ProductID
+JOIN Sales.SalesOrderHeader H ON d.SalesOrderID = h.SalesOrderID
+GROUP BY YEAR(OrderDate), MONTH(OrderDate)
+ORDER BY [Year], [Month];
 
 
---RANK QUARTER
-with MarginCalcQuarter as (
-select 
-	year(OrderDate) as YearDate,
-	datepart(quarter,h.OrderDate) as QuarterDate,
-	sum((d.LineTotal) - (d.OrderQty * p.StandardCost))  as Margin
-from sales.SalesOrderDetail d
-join Production.Product p
-	on d.ProductID=p.ProductID
-join sales.SalesOrderHeader h
-	on d.SalesOrderID=h.SalesOrderID
-group by datepart(quarter,h.OrderDate),year(OrderDate)
-)
+---------------------------------------------------------
+-- 4. RANKINGS (WINDOW FUNCTIONS)
+---------------------------------------------------------
 
-select 
-YearDate as 'Year',
-QuarterDate as 'Quarter',
-Margin,
-RANK () over(
-	order by Margin desc
-	) as QuarterRank
-from MarginCalcQuarter
+-- 4.1. Monthly Ranking per Year
+-- Logic: Identifies the best/worst month within each specific year using PARTITION BY.
+SELECT 
+    YEAR(h.OrderDate) AS [Year],
+    MONTH(h.OrderDate) AS [Month],
+    SUM(h.SubTotal - (p.StandardCost * d.OrderQty)) AS Profit,
+    RANK() OVER (
+        PARTITION BY YEAR(h.OrderDate) 
+        ORDER BY SUM(d.LineTotal - (p.StandardCost * d.OrderQty)) DESC
+    ) AS MonthlyRank
+FROM Sales.SalesOrderHeader H
+LEFT JOIN Sales.SalesOrderDetail D ON h.SalesOrderID = d.SalesOrderID
+LEFT JOIN Production.Product P ON d.ProductID = p.ProductID
+GROUP BY YEAR(h.OrderDate), MONTH(h.OrderDate)
+ORDER BY [Year], [Month];
 
 
---Pesquisa dos meses com prejuizo de 2012, por produto tendo em conta o desconto realizado.
+---------------------------------------------------------
+-- 5. AUDIT & SPECIFIC PRODUCT ANALYSIS
+---------------------------------------------------------
+
+-- 5.1. Loss Identification (Audit 2012-2013)
+-- Logic: Filtering products with negative profit where discounts were applied.
 SELECT 
     p.[Name],
-    YEAR(orderdate)  AS [Year],
-    MONTH(orderdate) AS [Month],
-    format(SUM(d.LineTotal - p.StandardCost * d.OrderQty),'n0') AS Profit,
-    format(avg(d.UnitPriceDiscount), '#.##%') avgDesconto
-FROM Sales.SalesOrderHeader h
-join Sales.SalesOrderDetail d
-on h.SalesOrderID = d.SalesOrderID
-join Production.Product p
-on d.ProductID = p.ProductID
-where
- p.SellEndDate is not Null
- and year(OrderDate) between 2012 and 2013
- and MONTH(OrderDate) in (4,6)
-GROUP BY YEAR(orderdate), MONTH(orderdate),p.Name
-having avg(d.UnitPriceDiscount) <>0
-order by 'year','month'
+    YEAR(OrderDate) AS [Year],
+    MONTH(OrderDate) AS [Month],
+    FORMAT(SUM(d.LineTotal - p.StandardCost * d.OrderQty), 'N0') AS Profit,
+    FORMAT(AVG(d.UnitPriceDiscount), 'P') AS AvgDiscount
+FROM Sales.SalesOrderHeader H
+JOIN Sales.SalesOrderDetail D ON h.SalesOrderID = d.SalesOrderID
+JOIN Production.Product P ON d.ProductID = p.ProductID
+WHERE p.SellEndDate IS NOT NULL
+  AND YEAR(OrderDate) BETWEEN 2012 AND 2013
+  AND MONTH(OrderDate) IN (4, 6)
+GROUP BY YEAR(OrderDate), MONTH(OrderDate), p.[Name]
+HAVING AVG(d.UnitPriceDiscount) <> 0
+ORDER BY [Year], [Month];
 
---Analise da margem de um produto em concreto (ex:778)
+-- 5.2. Detailed Product Analysis (ID 778)
+-- Logic: Tracking performance evolution of a specific item.
 SELECT 
     p.Name,
-    d.ProductID,
-    YEAR(orderdate)  AS [Year],
-    MONTH(orderdate) AS [Month],
-    format(SUM(d.LineTotal - p.StandardCost * d.OrderQty),'n0') AS Profit,
-    avg(d.UnitPriceDiscount)
-FROM Sales.SalesOrderHeader h
-join Sales.SalesOrderDetail d
-on h.SalesOrderID = d.SalesOrderID
-join Production.Product p
-on d.ProductID = p.ProductID
-where P.ProductID = 778
-
-
-GROUP BY YEAR(orderdate), MONTH(orderdate),d.ProductID,p.Name
-order by 'year','month'
+    YEAR(OrderDate) AS [Year],
+    MONTH(OrderDate) AS [Month],
+    FORMAT(SUM(d.LineTotal - p.StandardCost * d.OrderQty), 'N0') AS Profit,
+    AVG(d.UnitPriceDiscount) AS AvgDiscount
+FROM Sales.SalesOrderHeader H
+JOIN Sales.SalesOrderDetail D ON h.SalesOrderID = d.SalesOrderID
+JOIN Production.Product P ON d.ProductID = p.ProductID
+WHERE p.ProductID = 778
+GROUP BY YEAR(OrderDate), MONTH(OrderDate), p.Name
+ORDER BY [Year], [Month];
