@@ -23,6 +23,10 @@ This project focuses on a strategic analysis of the AdventureWorks database usin
 4. Deep Dive: Loss Identification
 •	Audit of Negative Margins: Filtered for products that generated losses during specific periods (2012-2013).
 •	Discount Impact: Used the HAVING clause to correlate losses with high discount rates (UnitPriceDiscount), auditing if promotions were hurting overall profitability.
+<img width="778" height="422" alt="image" src="https://github.com/user-attachments/assets/549a2135-7251-43b2-b23d-a3d149c51f98" />
+<img width="1024" height="656" alt="image" src="https://github.com/user-attachments/assets/9ddbc052-8cab-4041-b4e6-5344ab246cd8" />
+<img width="1200" height="575" alt="image" src="https://github.com/user-attachments/assets/3105ca9f-d492-4607-94b1-5cb92a9c357b" />
+
 
 💡 Business Insights
 •	Summer Peaks: Data shows a clear upward trend in revenue during the summer months, aligning with the nature of the products sold.
