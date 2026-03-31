@@ -32,8 +32,3 @@ This project focuses on a strategic analysis of the AdventureWorks database usin
 •	Summer Peaks: Data shows a clear upward trend in revenue during the summer months, aligning with the nature of the products sold.
 •	Strategic Disruption: Mass discounts in 2012 caused a financial anomaly that forced the company into a recovery cycle.
 •	Growth Trend: Despite historical challenges, the company shows a solid growth trajectory in both revenue and profit consolidation after June 2012.
-
-📫 Contact
-João Videira 
-•	LinkedIn: linkedin.com/in/joão-videira-5685501b4 
-•	Email: joaovideira1998@gmail.com
