@@ -1,7 +1,6 @@
 # Sql-Project--TechOf
 Exploratory sales and business performance analysis using SQL and Excel on the AdventureWorks database. Focused on revenue, profit, and seasonality KPIs.
 
-#Sales & Performance Analysis: AdventureWorks (SQL & Excel)
 📌 Project Overview
 This project focuses on a strategic analysis of the AdventureWorks database using SQL for data extraction and Excel for reporting. The main goal was to extract Key Performance Indicators (KPIs) such as revenue, profit, margins, and seasonality to provide a data-driven business perspective.
 
